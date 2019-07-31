@@ -231,6 +231,7 @@ public class EditorActivity extends AppCompatActivity {
         getContentResolver().update(NotesProvider.CONTENT_URI, values, noteFilter, null);
         Toast.makeText(this, R.string.note_updated, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
+        setTextFieldsToZero ();
     }
 
     private void insertNote(String noteText, String noteTitle, String noteDeadline) {
@@ -243,10 +244,17 @@ public class EditorActivity extends AppCompatActivity {
         getContentResolver().insert(NotesProvider.CONTENT_URI, values);
         Toast.makeText(this, R.string.note_added, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
+        setTextFieldsToZero ();
     }
 
     @Override
     public void onBackPressed() {
         finishEditing();
+    }
+
+    private void setTextFieldsToZero (){
+        editorText.setText("");
+        editorTitle.setText("");
+        editorDeadline.setText("");
     }
 }
