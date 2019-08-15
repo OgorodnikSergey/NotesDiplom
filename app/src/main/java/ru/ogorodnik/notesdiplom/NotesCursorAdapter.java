@@ -26,7 +26,7 @@ public class NotesCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        //Передаем полученные данные от объекта Cursor в строки, которые будут отображаться на экране во вьюшке (Заголовок, текст и Дата)
+        ///Передаем полученные данные от объекта Cursor в строки, которые будут отображаться на экране во вьюшке (Заголовок, текст и Дата)
 
         String noteText = cursor.getString(
                 cursor.getColumnIndex(DBOpenHelper.NOTE_TEXT)

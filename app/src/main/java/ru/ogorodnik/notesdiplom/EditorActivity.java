@@ -1,9 +1,7 @@
 package ru.ogorodnik.notesdiplom;
 
 import android.app.DatePickerDialog;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,17 +10,9 @@ import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 public class EditorActivity extends AppCompatActivity {
 
@@ -34,10 +24,11 @@ public class EditorActivity extends AppCompatActivity {
     private DatePickerDialog datePickerDialog;
     private CheckBox checkBox;
     private TextView deadline;
-    private String noteFilter;
+    private String selectedNoteID;
     private String oldText;
     private String oldTitle;
     private String oldDeadline;
+    private NoteRepository noteRepository;
 
 
     @Override
@@ -47,40 +38,31 @@ public class EditorActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        noteRepository = App.getNoteRepository();
         setDateSelector();
         setEditors();
     }
 
-    //объявляю редактируемы поля в Активити для ввода заметки
+    //объявляю редактируемые поля в Активити для ввода заметки
     private void setEditors() {
-        editorTitle = findViewById(R.id.editText);
-        editorText = findViewById(R.id.editText2);
-        editorDeadline = findViewById(R.id.editTextDeadline);
-        editorDeadline.setKeyListener(null);
+        initializeEditors();
         checkBox = findViewById(R.id.checkBox);
 
         setCheckBoxListener();
 
         Intent intent = getIntent();
-        Uri uri = intent.getParcelableExtra(NotesProvider.CONTENT_ITEM_TYPE);
+        Uri uri = intent.getParcelableExtra(noteRepository.getContentProviderContentItemType());
 
         if (uri == null){
             action = Intent.ACTION_INSERT;
             setTitle(getString(R.string.new_note));
         } else{
             action = Intent.ACTION_EDIT;
-            noteFilter = DBOpenHelper.NOTE_ID + "=" + uri.getLastPathSegment();
+            selectedNoteID = uri.getLastPathSegment();
 
-            Cursor cursor = getContentResolver().query(uri,
-                    DBOpenHelper.ALL_COLUMNS,
-                    noteFilter,
-                    null,
-                    null);
-
-            cursor.moveToFirst();
-            oldText = cursor.getString(cursor.getColumnIndex(DBOpenHelper.NOTE_TEXT));
-            oldTitle = cursor.getString(cursor.getColumnIndex(DBOpenHelper.NOTE_TITLE));
-            oldDeadline = cursor.getString(cursor.getColumnIndex(DBOpenHelper.NOTE_DEADLINE));
+            oldText = noteRepository.getSelectedNote(uri).Text;
+            oldTitle = noteRepository.getSelectedNote(uri).Title;
+            oldDeadline = noteRepository.getSelectedNote(uri).Deadline;
 
             if (!String.valueOf(oldDeadline).equals(""))
             {
@@ -97,6 +79,13 @@ public class EditorActivity extends AppCompatActivity {
             editorDeadline.setText(oldDeadline);
             editorText.requestFocus();
         }
+    }
+
+    private void initializeEditors() {
+        editorTitle = findViewById(R.id.editText);
+        editorText = findViewById(R.id.editText2);
+        editorDeadline = findViewById(R.id.editTextDeadline);
+        editorDeadline.setKeyListener(null);
     }
 
     private void setCheckBoxListener() {
@@ -123,20 +112,21 @@ public class EditorActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (checkBox.isChecked())
                 {
-                Calendar calendar = Calendar.getInstance();
-                int year = calendar.get(Calendar.YEAR);
-                int month = calendar.get(Calendar.MONTH);
-                int day = calendar.get(Calendar.DAY_OF_MONTH);
-                datePickerDialog = new DatePickerDialog(EditorActivity.this,
-                        new DatePickerDialog.OnDateSetListener() {
-                            @Override
-                            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-    // +1 потому что с нуля считает
-                                deadline.setText((month + 1) + "/"  + day  + "/" + year + " 00:00");
-                            }
-                        }, year, month, day);
-                datePickerDialog.show();
-            }}
+                    Calendar calendar = Calendar.getInstance();
+                    int year = calendar.get(Calendar.YEAR);
+                    int month = calendar.get(Calendar.MONTH);
+                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                    datePickerDialog = new DatePickerDialog(EditorActivity.this,
+                            new DatePickerDialog.OnDateSetListener() {
+                                @Override
+                                public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                                    // +1 к месяцу потому что с нуля считает
+                                    deadline.setText((month + 1) + getString(R.string.slash)  + day  +
+                                            getString(R.string.slash) + year + getString(R.string.hours_minutes_00));
+                                }
+                            }, year, month, day);
+                    datePickerDialog.show();
+                }}
         });
     }
 
@@ -154,14 +144,14 @@ public class EditorActivity extends AppCompatActivity {
                 break;
             case R.id.action_save:
                 finishEditing();
+                finish();
                 break;
         }
         return true;
     }
 
     private void deleteNote() {
-        getContentResolver().delete(NotesProvider.CONTENT_URI,
-                noteFilter, null);
+        noteRepository.deleteNote(selectedNoteID);
         Toast.makeText(this, R.string.note_deleted, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
         finish();
@@ -200,61 +190,22 @@ public class EditorActivity extends AppCompatActivity {
         }
     }
 
-    private String getDateTime(String dateString) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "MM/dd/yyyy HH:mm");
-        Date date = new Date(dateString);
-        return dateFormat.format(date);
-    }
-
-    private void setNoteDeadline(String noteDeadline, ContentValues values) {
-        if (noteDeadline.length() != 0) {
-            values.put(DBOpenHelper.NOTE_DEADLINE, getDateTime(noteDeadline));
-            values.put(DBOpenHelper.NOTE_HAS_DEADLINE, "YES");
-        } else {
-            values.put(DBOpenHelper.NOTE_DEADLINE, noteDeadline);
-            values.put(DBOpenHelper.NOTE_HAS_DEADLINE, "NO");
-        }
-    }
-
     private void updateNote(String noteText, String noteTitle, String noteDeadline) {
-        ContentValues values = new ContentValues();
-        values.put(DBOpenHelper.NOTE_TEXT, noteText);
-        values.put(DBOpenHelper.NOTE_TITLE, noteTitle);
-        Date dateNow = new Date(System.currentTimeMillis());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        values.put(DBOpenHelper.NOTE_CREATED, dateFormat.format(dateNow));
-        setNoteDeadline(noteDeadline, values);
         //обновляем значения в таблице
         //https://github.com/mitchtabian/SQLite-for-Beginners-2019
-
-        getContentResolver().update(NotesProvider.CONTENT_URI, values, noteFilter, null);
+        noteRepository.updateNote(selectedNoteID, noteText, noteTitle, noteDeadline);
         Toast.makeText(this, R.string.note_updated, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
-        setTextFieldsToZero ();
     }
 
     private void insertNote(String noteText, String noteTitle, String noteDeadline) {
-        ContentValues values = new ContentValues();
-        values.put(DBOpenHelper.NOTE_TEXT, noteText);
-        values.put(DBOpenHelper.NOTE_TITLE, noteTitle);
-        setNoteDeadline(noteDeadline, values);
-        //вставляем значения в таблицу
-        // https://github.com/mitchtabian/SQLite-for-Beginners-2019
-        getContentResolver().insert(NotesProvider.CONTENT_URI, values);
+        noteRepository.insertNote(noteText, noteTitle, noteDeadline);
         Toast.makeText(this, R.string.note_added, Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);
-        setTextFieldsToZero ();
     }
 
     @Override
     public void onBackPressed() {
         finishEditing();
-    }
-
-    private void setTextFieldsToZero (){
-        editorText.setText("");
-        editorTitle.setText("");
-        editorDeadline.setText("");
     }
 }

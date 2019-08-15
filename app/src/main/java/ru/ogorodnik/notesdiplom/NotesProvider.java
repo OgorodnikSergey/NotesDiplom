@@ -1,5 +1,6 @@
 package ru.ogorodnik.notesdiplom;
 
+
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -53,14 +54,15 @@ public class NotesProvider extends ContentProvider {
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] strings1, @Nullable String s1) {
         // Метод query выбирает данные из таблицы заметок
         // Может возвращать все заметки или только одну строку из таблицы
+
         if (uriMatcher.match(uri) == NOTES_ID){
             selection = DBOpenHelper.NOTE_ID + "=" + uri.getLastPathSegment();
         }
 
 
         return database.query(DBOpenHelper.TABLE_NOTES, DBOpenHelper.ALL_COLUMNS,
-        selection, null, null, null,
-          DBOpenHelper.NOTE_HAS_DEADLINE + " DESC" + "," + DBOpenHelper.NOTE_DEADLINE  + " ASC" + "," + DBOpenHelper.NOTE_CREATED + " DESC") ;
+                selection, null, null, null,
+                DBOpenHelper.NOTE_HAS_DEADLINE + " DESC" + "," + DBOpenHelper.NOTE_DEADLINE  + " ASC" + "," + DBOpenHelper.NOTE_CREATED + " DESC") ;
     }
 
 
@@ -75,6 +77,7 @@ public class NotesProvider extends ContentProvider {
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         //метод insert возвращает URI. base_path / значение ключа записи
         //Коллекция пары: имя - значение
+
         long id = database.insert(DBOpenHelper.TABLE_NOTES,
                 null, values);
 

@@ -10,7 +10,6 @@ public class DBOpenHelper extends SQLiteOpenHelper {
     // Книга "Разработка мобильных приложений" Федотенко М.А., стр 245 - работа с базами данных
     // https://www.andrious.com/tutorials/create-a-note-app-using-sqlite-database/
     // https://github.com/mitchtabian/SQLite-for-Beginners-2019
-
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 9;
 

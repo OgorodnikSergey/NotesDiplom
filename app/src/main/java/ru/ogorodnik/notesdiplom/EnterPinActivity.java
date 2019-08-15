@@ -1,7 +1,6 @@
 package ru.ogorodnik.notesdiplom;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,10 +22,9 @@ public class EnterPinActivity extends AppCompatActivity {
     private Button button9;
     private Button button0;
     private Button buttonBackSpace;
-    private RatingBar ratingBar;  // Самый простой вариант из тех что нагуглил, проще, чем рисовать  крожочки и закрашивать их
+    private RatingBar ratingBar; // Самый простой вариант из тех что нагуглил, проще, чем рисовать  крожочки и закрашивать их
 
-    private static final String PIN = "PIN";
-    private static final int PINSIZE = 4;
+    private static final int PINSIZE = 4; // кол-во символов в пароле
     private String enteredPin;
     private int progress;
 
@@ -38,11 +36,12 @@ public class EnterPinActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        ratingBar = findViewById(R.id.ratingBar);
+        initializeButtons();
+    }
 
+    private void initializeButtons() {
         enteredPin = "";
         progress = 0;
 
@@ -58,6 +57,10 @@ public class EnterPinActivity extends AppCompatActivity {
         button0 = findViewById(R.id.button0);
         buttonBackSpace = findViewById(R.id.buttonBackspace);
 
+        setButtonsListeners();
+    }
+
+    private void setButtonsListeners() {
         buttonBackSpace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -70,7 +73,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "1";
+                enteredPin += getString(R.string.num_1);
                 progress++;
                 checkPin();
             }
@@ -79,7 +82,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "2";
+                enteredPin += getString(R.string.num_2);
                 progress++;
                 checkPin();
             }
@@ -88,7 +91,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "3";
+                enteredPin += getString(R.string.num_3);
                 progress++;
                 checkPin();
             }
@@ -97,7 +100,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "4";
+                enteredPin += getString(R.string.num_4);
                 progress++;
                 checkPin();
             }
@@ -106,7 +109,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "5";
+                enteredPin += getString(R.string.num_5);
                 progress++;
                 checkPin();
             }
@@ -115,7 +118,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "6";
+                enteredPin += getString(R.string.num_6);
                 progress++;
                 checkPin();
             }
@@ -124,7 +127,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "7";
+                enteredPin += getString(R.string.num_7);
                 progress++;
                 checkPin();
             }
@@ -133,7 +136,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button8.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "8";
+                enteredPin += getString(R.string.num_8);
                 progress++;
                 checkPin();
             }
@@ -142,7 +145,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "9";
+                enteredPin += getString(R.string.num_9);
                 progress++;
                 checkPin();
             }
@@ -151,7 +154,7 @@ public class EnterPinActivity extends AppCompatActivity {
         button0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                enteredPin += "0";
+                enteredPin += getString(R.string.num_0);
                 progress++;
                 checkPin();
             }
@@ -164,19 +167,18 @@ public class EnterPinActivity extends AppCompatActivity {
 
     private void checkPin()
     {
+        ratingBar = findViewById(R.id.ratingBar);
         ratingBar.setRating(progress);
-        SharedPreferences sp = getSharedPreferences("password", Context.MODE_PRIVATE);
-        String pinhash = sp.getString(PIN, "");
         if (enteredPin.length() == PINSIZE)
         {
-            if (String.valueOf(enteredPin.hashCode()).equals(pinhash)){
+            if (App.getKeyStore().checkKey(enteredPin)){
                 setResult(RESULT_OK);
                 finish();
             } else {
                 enteredPin = "";
                 progress -= PINSIZE;
                 ratingBar.setRating(progress);
-                Toast.makeText(getApplicationContext() , "Invalid PIN", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext() , getString(R.string.invalid_PIN), Toast.LENGTH_LONG).show();
             }
         }
     }

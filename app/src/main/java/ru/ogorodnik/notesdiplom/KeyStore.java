@@ -1,4 +1,4 @@
-package com.example.test.notes;
+package ru.ogorodnik.notesdiplom;
 
 public interface KeyStore {
 
